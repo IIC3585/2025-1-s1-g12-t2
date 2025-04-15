@@ -1,0 +1,15 @@
+{
+  "name": "img",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "img_bg.wasm",
+    "img.js",
+    "img.d.ts"
+  ],
+  "main": "img.js",
+  "types": "img.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
