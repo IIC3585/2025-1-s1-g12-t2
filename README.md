@@ -1,6 +1,7 @@
 # Trabajo 2: Web Assembly y PWAs
 
 **Fecha de entrega:** lunes 21 de abril de 2025, 11:00
+
 **Disponible desde:** jueves 4 de abril de 2025, 11:00
 
 ---
