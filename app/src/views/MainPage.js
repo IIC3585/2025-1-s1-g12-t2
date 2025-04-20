@@ -177,7 +177,7 @@ function MainPage(){
     const [imageURL, setImageURL] = useState(null);
     return (
         <Box sx={{py: 2, px: {xs: 2, sm: 2, md: 15, lg: 15}, height: '100%'}}>
-            <InstallAlertDialog/>
+            {(window.matchMedia('(display-mode: standalone)').matches) ? null : <InstallAlertDialog/>}
             <Typography variant="h4" component="h1" gutterBottom align='center'>
                 Image Processing
             </Typography>
