@@ -19,19 +19,24 @@ const VisuallyHiddenInput = styled('input')({
 
 const buttonSx = {
     margin: 1,
-    width: '200px',
+    width: '90%',
 };
 
-function downloadImage(imageData, fileName) {
+function imageToUrl(imageData) {
     const blob = new Blob([imageData], { type: 'image/png' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    link.click();
+    return URL.createObjectURL(blob);
 }
 
-function applyToImage(fn, args){
+function downloadImage(imageURL, fileName) {
+    return async () => {
+        const link = document.createElement('a');
+        link.href = imageURL;
+        link.download = fileName;
+        link.click();
+    }
+}
+
+function applyToImage(setImageURL, fn, args){
     return async () => {
         await init();
         const fileInput = document.getElementById('imageInput');
@@ -39,7 +44,9 @@ function applyToImage(fn, args){
         if (file) {
             const arrayBuffer = await file.arrayBuffer();
             const imageData = fn(new Uint8Array(arrayBuffer), ...args);
-            downloadImage(imageData, 'processed_image.png');
+            const imageURL = imageToUrl(imageData);
+            setImageURL(imageURL);
+            // downloadImage(imageData, 'processed_image.png');
         }
     }
 }
@@ -68,8 +75,8 @@ function MediaBox({imageURL, setImageURL}){
     };
     const imageBoxSx = {
         objectFit: "contain",
-        maxHeight: '100%',
-        maxWidth: '100%',
+        maxHeight: '90%',
+        maxWidth: '90%',
     }
     let image = <Box component="img"
         sx={imageBoxSx}
@@ -131,14 +138,23 @@ function MainPage(){
             deferredPrompt = null;
         }
     };
-    
+    let menuBoxSx = {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        border: '2px solid',
+        borderColor: '#ccc',
+        borderRadius: 4,
+    }
     let filtersBoxSx = {
         display: 'flex',
         flexDirection: { xs:'column', sm: 'column', md: 'row'},
         alignItems: 'center',
         justifyContent: 'center',
         width: '100%',
-        border: '2px dashed #ccc',
+        border: '2px #ccc',
         borderRadius: 4,
     }
     return (
@@ -147,7 +163,7 @@ function MainPage(){
                 Image Processing
             </Typography>
             <MediaBox imageURL={imageURL} setImageURL={setImageURL}/>
-            <Box sx={'display: flex; flex-direction: column; justify-content: center;'}>
+            <Box sx={menuBoxSx}>
                 <Typography variant="h6" component="h2">
                         Filters
                 </Typography>
@@ -156,7 +172,7 @@ function MainPage(){
                         id="resizeButton" 
                         variant="contained"
                         sx={buttonSx}
-                        onClick={applyToImage(resize, [200, 200])}
+                        onClick={applyToImage(setImageURL, resize, [200, 200])}
                     >
                         Resize
                     </Button>
@@ -164,7 +180,7 @@ function MainPage(){
                         id="grayScaleButton" 
                         variant="contained"
                         sx={buttonSx}
-                        onClick={applyToImage(grayscale, [])}
+                        onClick={applyToImage(setImageURL, grayscale, [])}
                     >
                         Gray Scale
                     </Button>
@@ -172,13 +188,20 @@ function MainPage(){
                         id="blurButton" 
                         variant="contained"
                         sx={buttonSx}
-                        onClick={applyToImage(blur, [5.0])}
+                        onClick={applyToImage(setImageURL, blur, [5.0])}
                     >
                         Blur
                     </Button>
                 </Box>
             </Box>
-            
+            <Button 
+                id="downloadButton" 
+                variant="contained"
+                sx={buttonSx}
+                onClick={downloadImage(imageURL, 'processed_image.png')}
+            >
+                Download
+            </Button>
             <Button 
                 id="installButton" 
                 variant="contained"
