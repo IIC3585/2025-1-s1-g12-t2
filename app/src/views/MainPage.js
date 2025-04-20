@@ -5,6 +5,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import ImageIcon from '@mui/icons-material/Image';
 import init, { resize, grayscale, blur } from '../pkg/img.js';
 import { useEffect, useState } from 'react';
+import InstallAlertDialog from '../components/InstallAlertDialog.jsx';
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -173,35 +174,10 @@ function MainPage(){
         gap: 2,
 
     }
-    
-    let deferredPrompt;
-    useEffect(() => {
-        const handleBeforeInstallPrompt = (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-        };
-        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-        return () => {
-            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-        };
-    }, []);
     const [imageURL, setImageURL] = useState(null);
-    const handleInstallClick = async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const choiceResult = await deferredPrompt.userChoice;
-            if (choiceResult.outcome === 'accepted') {
-                console.log('PWA installation accepted');
-            } else {
-                console.log('PWA installation dismissed');
-            }
-            deferredPrompt = null;
-        }
-    };
-    
-    
     return (
         <Box sx={{py: 2, px: {xs: 2, sm: 2, md: 15, lg: 15}, height: '100%'}}>
+            <InstallAlertDialog/>
             <Typography variant="h4" component="h1" gutterBottom align='center'>
                 Image Processing
             </Typography>
