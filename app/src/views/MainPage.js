@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import { styled, Button, Typography } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import init, { resize, grayscale, blur } from '../pkg/img.js';
+import { useEffect } from 'react';
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -48,6 +49,32 @@ function MainPage(){
         margin: 1,
         width: '200px',
     };
+
+    let deferredPrompt;
+    useEffect(() => {
+        const handleBeforeInstallPrompt = (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        };
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        return () => {
+            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        };
+    }, []);
+
+    const handleInstallClick = async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const choiceResult = await deferredPrompt.userChoice;
+            if (choiceResult.outcome === 'accepted') {
+                console.log('PWA installation accepted');
+            } else {
+                console.log('PWA installation dismissed');
+            }
+            deferredPrompt = null;
+        }
+    };
+
     return (
         <Box sx={sx}>
             <Typography variant="h4" component="h1" gutterBottom>
@@ -92,6 +119,14 @@ function MainPage(){
                 onClick={applyToImage(blur, [5.0])}
             >
                 Blur
+            </Button>
+            <Button 
+                id="installButton" 
+                variant="contained"
+                sx={buttonSx}
+                onClick={handleInstallClick}
+            >
+                Install
             </Button>
         </Box>
     );
