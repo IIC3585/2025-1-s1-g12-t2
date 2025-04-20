@@ -1,6 +1,7 @@
 import Box from '@mui/material/Box';
 import { styled, Button, Typography } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import DownloadIcon from '@mui/icons-material/Download';
 import ImageIcon from '@mui/icons-material/Image';
 import init, { resize, grayscale, blur } from '../pkg/img.js';
 import { useEffect, useState } from 'react';
@@ -103,7 +104,7 @@ function MediaBox({imageURL, setImageURL}){
     </Box>)
 }
 
-function FiltersMenu({setImageURL}){
+function FiltersMenu({imageURL, setImageURL}){
     let menuBoxSx = {
         display: 'flex',
         flexDirection: 'column',
@@ -123,12 +124,13 @@ function FiltersMenu({setImageURL}){
         width: '90%',
         border: '2px #ccc',
         borderRadius: 4,
-        gap: 2,
+        gap: 1.5,
         margin: 2,
     }
     const buttonSx = {
         width: '100%',
         backgroundColor: actionColor,
+        borderRadius: 4,
     };
     const imgFilterFunctions = [
         { name: 'resize', fn: resize, args: [200, 200] },
@@ -137,7 +139,7 @@ function FiltersMenu({setImageURL}){
     ]
     return <Box sx={menuBoxSx}>
             <Typography variant="h6" component="h2" sx={{margin: 1}}>
-                    Filters to apply
+                    Filter to apply
             </Typography>
             <Box sx={filtersBoxSx}>
                 {imgFilterFunctions.map((filter, index) => (
@@ -146,6 +148,7 @@ function FiltersMenu({setImageURL}){
                         id={`${filter.name}Button`} 
                         variant="contained"
                         sx={buttonSx}
+                        disabled={imageURL ? false :  true}
                         onClick={applyToImage(setImageURL, filter.fn, filter.args)}
                     >
                         {filter.name.charAt(0).toUpperCase() + filter.name.slice(1)}
@@ -204,16 +207,18 @@ function MainPage(){
             </Typography>
             <Box sx={containerSx}>
                 <MediaBox imageURL={imageURL} setImageURL={setImageURL}/>
-                <FiltersMenu setImageURL={setImageURL}/>      
+                <FiltersMenu imageURL={imageURL} setImageURL={setImageURL}/>      
             </Box>
             <Button 
-                    id="downloadButton" 
-                    variant="contained"
-                    sx={{marginTop: 2, width: '100%', backgroundColor: actionColor}}
-                    onClick={downloadImage(imageURL, 'processed_image.png')}
-                >
-                    Download image
-                </Button>
+                id="downloadButton" 
+                variant="contained"
+                sx={{ borderRadius: 4, marginTop: 2, width: '100%', backgroundColor: actionColor}}
+                disabled={imageURL ? false :  true}
+                startIcon={<DownloadIcon/>}
+                onClick={downloadImage(imageURL, 'processed_image.png')}
+            >
+                Download Image
+            </Button>
         </Box>
     );
 }
