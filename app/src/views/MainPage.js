@@ -17,10 +17,7 @@ const VisuallyHiddenInput = styled('input')({
     width: 1,
 });
 
-const buttonSx = {
-    margin: 1,
-    width: '90%',
-};
+const actionColor = '#5863cc';
 
 function imageToUrl(imageData) {
     const blob = new Blob([imageData], { type: 'image/png' });
@@ -52,13 +49,13 @@ function applyToImage(setImageURL, fn, args){
 }
 
 function MediaBox({imageURL, setImageURL}){
-    const hoverColor = '#5863cc';
+    const hoverColor = actionColor;
     const mediaBoxSx = {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        width: '100%',
+        width: {xs: '100%', sm: '100%', md: '100%', lg: '200%'},
         height: 500,
         border: '2px dashed',
         borderColor: '#ccc',
@@ -106,14 +103,74 @@ function MediaBox({imageURL, setImageURL}){
     </Box>)
 }
 
-function MainPage(){
-    let sx = {
-        padding: 5,
+function FiltersMenu({setImageURL}){
+    let menuBoxSx = {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        height: '100%',
+        justifyContent: 'top',
+        width: '100%',
+        border: '2px solid',
+        borderColor: '#ccc',
+        borderRadius: 4,
+        
     }
+    let filtersBoxSx = {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '90%',
+        border: '2px #ccc',
+        borderRadius: 4,
+        gap: 2,
+        margin: 2,
+    }
+    const buttonSx = {
+        width: '100%',
+        backgroundColor: actionColor,
+    };
+    const imgFilterFunctions = [
+        { name: 'resize', fn: resize, args: [200, 200] },
+        { name: 'grayscale', fn: grayscale, args: [] },
+        { name: 'blur', fn: blur, args: [5.0] },
+    ]
+    return <Box sx={menuBoxSx}>
+            <Typography variant="h6" component="h2" sx={{margin: 1}}>
+                    Filters to apply
+            </Typography>
+            <Box sx={filtersBoxSx}>
+                {imgFilterFunctions.map((filter, index) => (
+                    <Button 
+                        key={index} 
+                        id={`${filter.name}Button`} 
+                        variant="contained"
+                        sx={buttonSx}
+                        onClick={applyToImage(setImageURL, filter.fn, filter.args)}
+                    >
+                        {filter.name.charAt(0).toUpperCase() + filter.name.slice(1)}
+                    </Button>
+                ))}
+            </Box>
+        </Box>;
+}
+
+function MainPage(){
+    let containerSx = {
+        display: 'flex',
+        flexDirection: {
+            xs:'column', 
+            sm: 'column', 
+            md: 'row', 
+            lg: 'row'
+        },
+        alignItems: 'stretch',
+        height: '100%',
+        justifyContent: 'center',
+        gap: 2,
+
+    }
+    
     let deferredPrompt;
     useEffect(() => {
         const handleBeforeInstallPrompt = (e) => {
@@ -138,78 +195,25 @@ function MainPage(){
             deferredPrompt = null;
         }
     };
-    let menuBoxSx = {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '100%',
-        border: '2px solid',
-        borderColor: '#ccc',
-        borderRadius: 4,
-    }
-    let filtersBoxSx = {
-        display: 'flex',
-        flexDirection: { xs:'column', sm: 'column', md: 'row'},
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '100%',
-        border: '2px #ccc',
-        borderRadius: 4,
-    }
+    
+    
     return (
-        <Box sx={sx}>
-            <Typography variant="h4" component="h1" gutterBottom>
+        <Box sx={{py: 2, px: {xs: 2, sm: 2, md: 15, lg: 15}, height: '100%'}}>
+            <Typography variant="h4" component="h1" gutterBottom align='center'>
                 Image Processing
             </Typography>
-            <MediaBox imageURL={imageURL} setImageURL={setImageURL}/>
-            <Box sx={menuBoxSx}>
-                <Typography variant="h6" component="h2">
-                        Filters
-                </Typography>
-                <Box sx={filtersBoxSx}>
-                    <Button 
-                        id="resizeButton" 
-                        variant="contained"
-                        sx={buttonSx}
-                        onClick={applyToImage(setImageURL, resize, [200, 200])}
-                    >
-                        Resize
-                    </Button>
-                    <Button 
-                        id="grayScaleButton" 
-                        variant="contained"
-                        sx={buttonSx}
-                        onClick={applyToImage(setImageURL, grayscale, [])}
-                    >
-                        Gray Scale
-                    </Button>
-                    <Button 
-                        id="blurButton" 
-                        variant="contained"
-                        sx={buttonSx}
-                        onClick={applyToImage(setImageURL, blur, [5.0])}
-                    >
-                        Blur
-                    </Button>
-                </Box>
+            <Box sx={containerSx}>
+                <MediaBox imageURL={imageURL} setImageURL={setImageURL}/>
+                <FiltersMenu setImageURL={setImageURL}/>      
             </Box>
             <Button 
-                id="downloadButton" 
-                variant="contained"
-                sx={buttonSx}
-                onClick={downloadImage(imageURL, 'processed_image.png')}
-            >
-                Download
-            </Button>
-            <Button 
-                id="installButton" 
-                variant="contained"
-                sx={buttonSx}
-                onClick={handleInstallClick}
-            >
-                Install
-            </Button>
+                    id="downloadButton" 
+                    variant="contained"
+                    sx={{marginTop: 2, width: '100%', backgroundColor: actionColor}}
+                    onClick={downloadImage(imageURL, 'processed_image.png')}
+                >
+                    Download image
+                </Button>
         </Box>
     );
 }
