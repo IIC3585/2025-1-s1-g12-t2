@@ -1,5 +1,52 @@
 # Trabajo 2: Web Assembly y PWAs
 
+Se puede encontrar una versión de producción de nuestra aplicación en: https://t2-pwa.web.app/
+
+Este repositorio contiene dos carpetas principales
+- `app` que contiene el codigo principal de nuestra aplicación (hecha en React, con MUI)
+- `img` que contiene el codigo utilizado para crear el modulo de procesamiento de imagenes con WASM (`pkg`)
+
+La aplicación `app` tiene la siguiente estructura de directorios:
+
+```
+app/
+├── public/
+│   ├── img/
+│   ├── index.html
+│   ├── manifest.json
+│   ├── robots.txt
+│   └── splash.css
+├── src/
+│   ├── components/
+│   ├── pkg/
+│   ├── services/
+│   ├── styles/
+│   └── views/
+│       ├── FiltersMenu.js
+│       ├── GalleryPage.js
+│       └── MainPage.js
+├── App.css
+├── App.js
+├── App.test.js
+├── index.css
+├── index.js
+├── logo.svg
+├── reportWebVitals.js
+├── service-worker.js
+├── serviceWorkerRegistration.js
+├── setupTests.js
+├── theme.js
+├── themeContext.js
+├── .firebaserc
+├── .gitignore
+├── firebase.json
+├── package-lock.json
+├── package.json
+└── README.md
+```
+
+# Enunciado
+
 **Fecha de entrega:** lunes 21 de abril de 2025, 11:00
 
 **Disponible desde:** jueves 4 de abril de 2025, 11:00
