@@ -8,6 +8,7 @@ export const lightTheme = createTheme({
       contrastText: "#ffffff",
       highlight: "#33373A",
       highlightText: "#ffffff",
+      info: "#5863cc",
     },
     background: {
       default: "#ffffff",
@@ -28,6 +29,7 @@ export const darkTheme = createTheme({
       contrastText: "#33373A",
       highlight: "#5863cc",
       highlightText: "#f5f5f5",
+      info: "#5863cc",
     },
     background: {
       default: "#222222",

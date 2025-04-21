@@ -12,13 +12,16 @@ import {
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DownloadIcon from "@mui/icons-material/Download";
 import SaveIcon from "@mui/icons-material/Save";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import Box from "@mui/material/Box";
 import ThemeToggleSwitch from "../components/ThemeToggleSwitch";
 import { useTheme } from "@mui/material/styles";
 import InstallAlertDialog from "../components/InstallAlertDialog.jsx";
 import SaveImageDialog from "../components/SaveImageDialog.jsx";
-import SavedImagesGallery from "../components/SavedImagesGallery.jsx";
 import { saveImage } from "../services/indexedDBService.js";
+import { useNavigate, useLocation } from "react-router-dom";
+import IconButton from "@mui/material/IconButton";
+import InfoIcon from "@mui/icons-material/Info";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -54,22 +57,29 @@ function downloadImage(imageURL, fileName) {
   };
 }
 
-function applyToImage(setImageURL, fn, args) {
+function applyToImage(setImageURL, fn, args, initialImageUrl) {
   return async () => {
     await init();
     const fileInput = document.getElementById("imageInput");
-    const file = fileInput.files[0];
-    if (file) {
-      const arrayBuffer = await file.arrayBuffer();
+    let arrayBuffer;
+
+    if (fileInput.files[0]) {
+      arrayBuffer = await fileInput.files[0].arrayBuffer();
+    } else if (initialImageUrl) {
+      const response = await fetch(initialImageUrl);
+      const blob = await response.blob();
+      arrayBuffer = await blob.arrayBuffer();
+    }
+
+    if (arrayBuffer) {
       const imageData = fn(new Uint8Array(arrayBuffer), ...args);
       const imageURL = imageToUrl(imageData);
       setImageURL(imageURL);
-      // downloadImage(imageData, 'processed_image.png');
     }
   };
 }
 
-function MediaBox({ imageURL, setImageURL }) {
+function MediaBox({ imageURL, setImageURL, setInitialImageUrl }) {
   const hoverColor = actionColor;
   const mediaBoxSx = {
     display: "flex",
@@ -88,7 +98,7 @@ function MediaBox({ imageURL, setImageURL }) {
       cursor: "pointer",
     },
     "&:hover .child": {
-      color: hoverColor, // Change child styles on hover
+      color: hoverColor,
     },
   };
   const imageBoxSx = {
@@ -97,12 +107,7 @@ function MediaBox({ imageURL, setImageURL }) {
     maxWidth: "90%",
   };
   let image = (
-    <Box
-      component="img"
-      sx={imageBoxSx}
-      alt="The house from the offer."
-      src={imageURL}
-    />
+    <Box component="img" sx={imageBoxSx} alt="Image preview" src={imageURL} />
   );
   let initialMessage = (
     <>
@@ -129,8 +134,8 @@ function MediaBox({ imageURL, setImageURL }) {
           const file = event.target.files[0];
           if (!file) return;
           const url = URL.createObjectURL(file);
-          console.log(url);
           setImageURL(url);
+          setInitialImageUrl(url);
         }}
         multiple
       />
@@ -138,34 +143,37 @@ function MediaBox({ imageURL, setImageURL }) {
   );
 }
 
-function FiltersMenu({ imageURL, setImageURL }) {
+function FiltersMenu({ imageURL, setImageURL, initialImageUrl }) {
   const theme = useTheme();
-  let menuBoxSx = {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "top",
-    width: "100%",
-    border: "2px solid",
-    borderColor: "#ccc",
-    borderRadius: 4,
-  };
-  let filtersBoxSx = {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "90%",
-    border: "2px #ccc",
-    borderRadius: 4,
-    gap: 1.5,
-    margin: 2,
-  };
   const buttonSx = {
     width: "100%",
     backgroundColor: theme.palette.primary.main,
     fontWeight: "bold",
     borderRadius: 4,
+  };
+  const filtersBoxSx = {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "90%",
+    borderRadius: 4,
+    gap: 1.5,
+    margin: 2,
+  };
+  const menuBoxSx = {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "top",
+    width: { xs: "100%", sm: "100%", md: "100%", lg: "100%" },
+    maxWidth: 400,
+    border: "2px solid",
+    borderColor: "#ccc",
+    borderRadius: 4,
+    padding: { xs: 2, sm: 3, md: 3 },
+    boxSizing: "border-box",
+    margin: "0 auto",
   };
   const imgFilterFunctions = [
     { name: "resize", fn: resize, args: [200, 200] },
@@ -184,8 +192,13 @@ function FiltersMenu({ imageURL, setImageURL }) {
             id={`${filter.name}Button`}
             variant="contained"
             sx={buttonSx}
-            disabled={imageURL ? false : true}
-            onClick={applyToImage(setImageURL, filter.fn, filter.args)}
+            disabled={!imageURL}
+            onClick={applyToImage(
+              setImageURL,
+              filter.fn,
+              filter.args,
+              initialImageUrl
+            )}
           >
             {filter.name.charAt(0).toUpperCase() + filter.name.slice(1)}
           </Button>
@@ -196,73 +209,30 @@ function FiltersMenu({ imageURL, setImageURL }) {
 }
 
 function MainPage() {
-  let containerSx = {
-    display: "flex",
-    flexDirection: {
-      xs: "column",
-      sm: "column",
-      md: "row",
-      lg: "row",
-    },
-    alignItems: "stretch",
-    height: "100%",
-    justifyContent: "center",
-    gap: 2,
-  };
+  const theme = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [imageURL, setImageURL] = useState(null);
+  const [initialImageUrl, setInitialImageUrl] = useState(null);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [installDialogOpen, setInstallDialogOpen] = useState(false);
   const [snackbarState, setSnackbarState] = useState({
     open: false,
     message: "",
     severity: "success",
   });
-  const [galleryRefreshTrigger, setGalleryRefreshTrigger] = useState(0);
 
-  // Function to handle saving an image
-  const handleSaveImage = async (imageName) => {
-    try {
-      // Convert image URL to blob for storing in IndexedDB
-      const imageBlob = await urlToBlob(imageURL);
-
-      // Save image to IndexedDB
-      await saveImage(imageBlob, imageName);
-
-      // Trigger gallery refresh by incrementing the counter
-      setGalleryRefreshTrigger((prev) => prev + 1);
-
-      // Close dialog and show success message
-      setSaveDialogOpen(false);
-      setSnackbarState({
-        open: true,
-        message: "Image saved successfully!",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error saving image:", error);
-      setSnackbarState({
-        open: true,
-        message: "Failed to save image. Please try again.",
-        severity: "error",
-      });
+  useEffect(() => {
+    if (location.state?.imageURL) {
+      setImageURL(location.state.imageURL);
+      setInitialImageUrl(location.state.imageURL);
+      navigate(location.pathname, { replace: true, state: {} });
     }
-  };
-
-  // Handler for loading a saved image into the editor
-  const handleLoadSavedImage = (url) => {
-    setImageURL(url);
-
-    // Scroll to top to show the loaded image
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
+  }, [location.state]);
 
   const handleCloseSnackbar = () => {
-    setSnackbarState({
-      ...snackbarState,
-      open: false,
-    });
+    setSnackbarState({ ...snackbarState, open: false });
   };
 
   return (
@@ -277,20 +247,81 @@ function MainPage() {
         justifyContent: "center",
       }}
     >
-      {/* Mostrar alerta de instalación si no está en modo standalone */}
-      {!window.matchMedia("(display-mode: standalone)").matches && (
-        <InstallAlertDialog />
-      )}
-      {/* <Typography variant="h4" component="h1" gutterBottom align="center">
-        - GET SOME FILTERS -
-      </Typography> */}
-      <ThemeToggleSwitch />
-      <Box sx={containerSx}>
-        <MediaBox imageURL={imageURL} setImageURL={setImageURL} />
-        <FiltersMenu imageURL={imageURL} setImageURL={setImageURL} />
+      <InstallAlertDialog
+        open={installDialogOpen}
+        onClose={() => setInstallDialogOpen(false)}
+      />
+
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2,
+        }}
+      >
+        {/* Switch de tema a la izquierda */}
+        <ThemeToggleSwitch />
+
+        {/* Botones Info + Gallery a la derecha */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          {!window.matchMedia("(display-mode: standalone)").matches && (
+            <IconButton
+              aria-label="info-install"
+              onClick={() => setInstallDialogOpen(true)}
+              sx={{
+                borderRadius: "50%",
+                boxShadow: 4,
+                background: `linear-gradient(135deg, ${theme.palette.primary.info} 60%, ${theme.palette.secondary.main} 100%)`,
+                color: theme.palette.primary.highlightText,
+                width: 40,
+                height: 40,
+                transition: "box-shadow 0.3s, filter 0.3s",
+                filter: "drop-shadow(0 0 8px #fff8) brightness(1)",
+                "&:hover": {
+                  background: `linear-gradient(135deg, ${theme.palette.secondary.info} 60%, ${theme.palette.primary.main} 100%)`,
+                },
+              }}
+            >
+              <InfoIcon sx={{ fontSize: 32 }} />
+            </IconButton>
+          )}
+          <Button
+            variant="contained"
+            onClick={() => navigate("/gallery")}
+            sx={{
+              borderRadius: 4,
+              backgroundColor: theme.palette.primary.highlight,
+              color: theme.palette.primary.highlightText,
+              fontWeight: "bold",
+            }}
+          >
+            Gallery <ArrowForwardIcon sx={{ ml: 1 }} />
+          </Button>
+        </Box>
       </Box>
 
-      {/* Botones de acción */}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          gap: 2,
+          justifyContent: "center",
+          alignItems: "stretch",
+        }}
+      >
+        <MediaBox
+          imageURL={imageURL}
+          setImageURL={setImageURL}
+          setInitialImageUrl={setInitialImageUrl}
+        />
+        <FiltersMenu
+          imageURL={imageURL}
+          setImageURL={setImageURL}
+          initialImageUrl={initialImageUrl}
+        />
+      </Box>
+
       <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
         <Button
           id="downloadButton"
@@ -298,8 +329,8 @@ function MainPage() {
           sx={{
             borderRadius: 4,
             flex: 1,
-            backgroundColor: theme.palette.primary.main,
-            color: theme.palette.primary.contrastText,
+            backgroundColor: theme.palette.primary.highlight,
+            color: theme.palette.primary.highlightText,
             fontWeight: "bold",
           }}
           disabled={!imageURL}
@@ -314,8 +345,8 @@ function MainPage() {
           sx={{
             borderRadius: 4,
             flex: 1,
-            backgroundColor: theme.palette.primary.main,
-            color: theme.palette.primary.contrastText,
+            backgroundColor: theme.palette.primary.highlight,
+            color: theme.palette.primary.highlightText,
             fontWeight: "bold",
           }}
           disabled={!imageURL}
@@ -326,24 +357,30 @@ function MainPage() {
         </Button>
       </Box>
 
-      {/* Divider */}
-      <Divider sx={{ my: 4 }} />
-
-      {/* Galería de imágenes */}
-      <SavedImagesGallery
-        onImageSelect={handleLoadSavedImage}
-        refreshTrigger={galleryRefreshTrigger}
-      />
-
-      {/* Diálogo para guardar imagen */}
       <SaveImageDialog
         open={saveDialogOpen}
         onClose={() => setSaveDialogOpen(false)}
-        onSave={handleSaveImage}
+        onSave={async (name) => {
+          try {
+            const blob = await urlToBlob(imageURL);
+            await saveImage(blob, name);
+            setSaveDialogOpen(false);
+            setSnackbarState({
+              open: true,
+              message: "Image saved successfully!",
+              severity: "success",
+            });
+          } catch (err) {
+            setSnackbarState({
+              open: true,
+              message: "Error saving image",
+              severity: "error",
+            });
+          }
+        }}
         previewUrl={imageURL}
       />
 
-      {/* Snackbar de confirmación */}
       <Snackbar
         open={snackbarState.open}
         autoHideDuration={4000}
@@ -359,12 +396,7 @@ function MainPage() {
         </Alert>
       </Snackbar>
 
-      {/* Frase bonita final */}
-      <Typography
-        align="center"
-        variant="body2"
-        sx={{ marginTop: "2vh", opacity: "60%" }}
-      >
+      <Typography align="center" variant="body2" sx={{ opacity: "60%", mt: 4 }}>
         Welcome to ▸ <strong>Get Some Filters</strong> ◂ <br />
         Feel free to use any available filter. Upload, experiment, download —
         it's that simple.
@@ -372,4 +404,5 @@ function MainPage() {
     </Box>
   );
 }
+
 export { MainPage };

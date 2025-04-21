@@ -1,6 +1,7 @@
 import "./App.css";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { MainPage } from "./views/MainPage";
+import { GalleryPage } from "./views/GalleryPage";
 import { useEffect } from "react";
 import { initDB } from "./services/indexedDBService";
 
@@ -27,7 +28,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route exact path="/" element={<MainPage />}></Route>
+        <Route exact path="/" element={<MainPage />} />
+        <Route path="/gallery" element={<GalleryPage />} />
       </Routes>
     </Router>
   );

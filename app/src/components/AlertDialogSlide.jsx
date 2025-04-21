@@ -1,25 +1,29 @@
-import * as React from 'react';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
-import Slide from '@mui/material/Slide';
+import * as React from "react";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+import Slide from "@mui/material/Slide";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export default function AlertDialogSlide({title, contentText, buttons}) {
-  const [open, setOpen] = React.useState(true);
-
-  const handleClose =  (buttonOnClickFn) => {
+export default function AlertDialogSlide({
+  title,
+  contentText,
+  buttons,
+  open,
+  onClose,
+}) {
+  const handleClose = (buttonOnClickFn) => {
     return () => {
-      setOpen(false);
-      buttonOnClickFn();
+      if (onClose) onClose();
+      buttonOnClickFn?.();
     };
-  }
+  };
 
   return (
     <React.Fragment>
@@ -37,13 +41,11 @@ export default function AlertDialogSlide({title, contentText, buttons}) {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-            {
-                buttons.map((button, index) => {
-                    return React.cloneElement(button, {
-                        onClick: handleClose(button.props.onClick),
-                    });
-                })
-            }
+          {buttons.map((button, index) => {
+            return React.cloneElement(button, {
+              onClick: handleClose(button.props.onClick),
+            });
+          })}
         </DialogActions>
       </Dialog>
     </React.Fragment>
