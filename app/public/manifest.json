@@ -3,22 +3,29 @@
   "short_name": "Filters",
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
+  "theme_color": "#ffffff",
   "background_color": "#ffffff",
   "description": "Una app que aplica filtros a tus imágenes usando WebAssembly",
-  "icons": [
+  "screenshots": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "img/lightMode.png",
+      "type": "image/png",
+      "sizes": "1440x1080"
     },
     {
-      "src": "logo192.png",
+      "src": "img/darkMode.png",
       "type": "image/png",
+      "sizes": "1440x1080"
+    }
+  ],
+  "icons": [
+    {
+      "src": "img/camera192.png",
+      "type": "img/image/png",
       "sizes": "192x192"
     },
     {
-      "src": "logo512.png",
+      "src": "img/camera512.png",
       "type": "image/png",
       "sizes": "512x512"
     }
