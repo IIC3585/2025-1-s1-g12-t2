@@ -1,11 +1,15 @@
 import Box from '@mui/material/Box';
-import { styled, Button, Typography } from '@mui/material';
+import { styled, Button, Typography, Snackbar, Alert, Divider } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DownloadIcon from '@mui/icons-material/Download';
+import SaveIcon from '@mui/icons-material/Save';
 import ImageIcon from '@mui/icons-material/Image';
 import init, { resize, grayscale, blur } from '../pkg/img.js';
 import { useEffect, useState } from 'react';
 import InstallAlertDialog from '../components/InstallAlertDialog.jsx';
+import SaveImageDialog from '../components/SaveImageDialog.jsx';
+import SavedImagesGallery from '../components/SavedImagesGallery.jsx';
+import { saveImage } from '../services/indexedDBService.js';
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -24,6 +28,12 @@ const actionColor = '#5863cc';
 function imageToUrl(imageData) {
     const blob = new Blob([imageData], { type: 'image/png' });
     return URL.createObjectURL(blob);
+}
+
+async function urlToBlob(url) {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return blob;
 }
 
 function downloadImage(imageURL, fileName) {
@@ -172,9 +182,64 @@ function MainPage(){
         height: '100%',
         justifyContent: 'center',
         gap: 2,
-
     }
+    
     const [imageURL, setImageURL] = useState(null);
+    const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+    const [snackbarState, setSnackbarState] = useState({
+        open: false,
+        message: '',
+        severity: 'success'
+    });
+    const [galleryRefreshTrigger, setGalleryRefreshTrigger] = useState(0);
+
+    // Function to handle saving an image
+    const handleSaveImage = async (imageName) => {
+        try {
+            // Convert image URL to blob for storing in IndexedDB
+            const imageBlob = await urlToBlob(imageURL);
+            
+            // Save image to IndexedDB
+            await saveImage(imageBlob, imageName);
+            
+            // Trigger gallery refresh by incrementing the counter
+            setGalleryRefreshTrigger(prev => prev + 1);
+            
+            // Close dialog and show success message
+            setSaveDialogOpen(false);
+            setSnackbarState({
+                open: true,
+                message: 'Image saved successfully!',
+                severity: 'success'
+            });
+        } catch (error) {
+            console.error('Error saving image:', error);
+            setSnackbarState({
+                open: true,
+                message: 'Failed to save image. Please try again.',
+                severity: 'error'
+            });
+        }
+    };
+
+    // Handler for loading a saved image into the editor
+    const handleLoadSavedImage = (url) => {
+        setImageURL(url);
+        
+        // Scroll to top to show the loaded image
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    };
+
+    const handleCloseSnackbar = () => {
+        setSnackbarState({
+            ...snackbarState,
+            open: false
+        });
+    };
+
     return (
         <Box sx={{py: 2, px: {xs: 2, sm: 2, md: 15, lg: 15}, height: '100%'}}>
             {(window.matchMedia('(display-mode: standalone)').matches) ? null : <InstallAlertDialog/>}
@@ -185,16 +250,63 @@ function MainPage(){
                 <MediaBox imageURL={imageURL} setImageURL={setImageURL}/>
                 <FiltersMenu imageURL={imageURL} setImageURL={setImageURL}/>      
             </Box>
-            <Button 
-                id="downloadButton" 
-                variant="contained"
-                sx={{ borderRadius: 4, marginTop: 2, width: '100%', backgroundColor: actionColor}}
-                disabled={imageURL ? false :  true}
-                startIcon={<DownloadIcon/>}
-                onClick={downloadImage(imageURL, 'processed_image.png')}
+            
+            {/* Action Buttons */}
+            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                <Button 
+                    id="downloadButton" 
+                    variant="contained"
+                    sx={{ borderRadius: 4, flex: 1, backgroundColor: actionColor}}
+                    disabled={imageURL ? false :  true}
+                    startIcon={<DownloadIcon/>}
+                    onClick={downloadImage(imageURL, 'processed_image.png')}
+                >
+                    Download
+                </Button>
+                <Button 
+                    id="saveButton" 
+                    variant="contained"
+                    sx={{ borderRadius: 4, flex: 1, backgroundColor: actionColor}}
+                    disabled={imageURL ? false :  true}
+                    startIcon={<SaveIcon/>}
+                    onClick={() => setSaveDialogOpen(true)}
+                >
+                    Save to Gallery
+                </Button>
+            </Box>
+            
+            {/* Divider between editor and gallery */}
+            <Divider sx={{ my: 4 }} />
+            
+            {/* Saved Images Gallery */}
+            <SavedImagesGallery 
+                onImageSelect={handleLoadSavedImage} 
+                refreshTrigger={galleryRefreshTrigger} 
+            />
+            
+            {/* Save Image Dialog */}
+            <SaveImageDialog 
+                open={saveDialogOpen}
+                onClose={() => setSaveDialogOpen(false)}
+                onSave={handleSaveImage}
+                previewUrl={imageURL}
+            />
+            
+            {/* Notification Snackbar */}
+            <Snackbar 
+                open={snackbarState.open}
+                autoHideDuration={4000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
-                Download Image
-            </Button>
+                <Alert 
+                    onClose={handleCloseSnackbar} 
+                    severity={snackbarState.severity}
+                    sx={{ width: '100%' }}
+                >
+                    {snackbarState.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 }
