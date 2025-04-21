@@ -63,6 +63,7 @@ export function useSxStyles() {
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
+      mt: 2,
       mb: 2,
     },
     mainContainer: {
