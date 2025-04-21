@@ -7,6 +7,7 @@ import reportWebVitals from "./reportWebVitals";
 import { ThemeProvider } from "@mui/material/styles";
 import { lightTheme, darkTheme } from "./theme";
 import { ThemeProviderWrapper, ThemeContext } from "./themeContext";
+import { AppGlobalStyles } from "./styles/globalStyles";
 
 // Manejo de temas
 const savedTheme = localStorage.getItem("theme");
@@ -26,6 +27,7 @@ root.render(
       <ThemeContext.Consumer>
         {({ theme }) => (
           <ThemeProvider theme={theme}>
+            <AppGlobalStyles />
             <App />
           </ThemeProvider>
         )}
