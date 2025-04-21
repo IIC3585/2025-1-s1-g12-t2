@@ -45,6 +45,18 @@ app/
 └── README.md
 ```
 
+Los comandos utilizados para levantar la aplicación (desde el directorio `app`) son:
+```
+npm install
+npm start
+```
+
+Para subir a producción:
+```
+npm run build
+firebase deploy
+```
+
 # Enunciado
 
 **Fecha de entrega:** lunes 21 de abril de 2025, 11:00
