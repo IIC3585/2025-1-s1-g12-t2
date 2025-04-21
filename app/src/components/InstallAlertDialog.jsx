@@ -5,17 +5,18 @@ import { useEffect, useState } from "react";
 function InstallAlertDialog(){
     const title = 'Do you want to install this app?'
     const contentText = 'This app is a PWA and can be installed on your device for offline use.'
-    let deferredPrompt;
+    const [deferredPrompt, setDeferredPrompt] = useState(null);
     useEffect(() => {
         const handleBeforeInstallPrompt = (e) => {
             e.preventDefault();
-            deferredPrompt = e;
+            setDeferredPrompt(e);
         };
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
         return () => {
             window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
         };
     }, []);
+    
     const handleInstallClick = async () => {
         if (deferredPrompt) {
             deferredPrompt.prompt();
@@ -25,7 +26,7 @@ function InstallAlertDialog(){
             } else {
                 console.log('PWA installation dismissed');
             }
-            deferredPrompt = null;
+            setDeferredPrompt(null);
         }
     };
     let installButton = <Button id="installButton" variant="contained" onClick={handleInstallClick}> Install </Button>
